@@ -1,0 +1,13 @@
+{% extends "tabview/_template.html" %}
+
+{% block head %}
+<title>Таблица запчастей</title>
+{% endblock %}
+
+{% block content %}
+    <p>Можно
+    <a href="order_list">посмотреть </a> или 
+    <a href="order_list.json" download> скачать </a> 
+    спецификацию для заказа.</p>
+    {{ table_content|safe }}
+{% endblock %}

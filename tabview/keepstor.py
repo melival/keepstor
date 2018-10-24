@@ -1,13 +1,19 @@
 from urllib.request import urlopen
-from json import loads, dumps, dump
+from json import loads, dumps
+import os
+
+json_raw_path = "./tabview/templates/tabview/order_list.json"
 
 alts = loads(urlopen("https://job.firstvds.ru/alternatives.json").read()).get("alternatives")
 stor = loads(urlopen("https://job.firstvds.ru/spares.json").read())
 order_list = {}
 
+
 def _check_alts(alts, stor):
-    for k in alts.keys(): # check with alternatives first
-        cnt, arr, mbe = 0, 0, 0
+    '''Пересчитывает позиции по списку аналогов.
+    '''
+    for k in alts.keys():
+        cnt, arr, mbe = 0, 0, 0 # init counters
         for i in alts.get(k):
             item = stor.get(i)
             if (i in stor.keys()):
@@ -23,7 +29,9 @@ def _check_alts(alts, stor):
 
 
 def _build_order_list(stor):
-    for k in stor.keys(): # check all list
+    '''Пересчитывает недостающие по всему списку.
+    '''
+    for k in stor.keys():
         item = stor.get(k)
         cnt = item.get("count") 
         arr = item.get("arrive")
@@ -34,26 +42,17 @@ def _build_order_list(stor):
     return order_list
 
 
-def _print_list(stor, order_list):           
-    for k in stor.keys():
-        item = stor.get(k)
-        c = item.get("count")
-        a = item.get("arrive")
-        m = item.get("mustbe")
-        print("!!! " if k in order_list.keys() else "", k,
-            " : we have:", c, " wait for:", a, " need:", m)
-
-
 def order_dump_to_json(order_list):
-    print("Order list:")
+    '''Сохраняет спецификацию для заказа в json-файл.
+    '''
     order_list = dict({"order_list": order_list})      
-    #print(dumps(order_list, sort_keys=True, indent=4)) #if need pretty out
-    print(dumps(order_list)) #if need just a string
-    with open("order_list.json", mode="w") as f:
+    with open(os.path.normpath(json_raw_path), mode="w") as f:
         f.write(dumps(order_list, sort_keys=True, indent=4))
 
-def build_http_table(stor, order_list):
-    # Create a html table
+
+def build_html_table(stor, order_list):
+    ''' Строит html-таблицу для отчета из готовых данных.
+    '''
     result = "<table>\n"
     result += "<tr><td>Description</td><td>Count</td><td>Arrive</td><td>Must be</td></tr>\n"
     td = "</td><td>"
@@ -70,37 +69,32 @@ def build_http_table(stor, order_list):
     return result
 
 
-def get_http_result_table():
+def get_html_result_table():
+    '''Готовит данные для отчета, json-файл для заказа
+    и выдает таблицу для отображения на странице.'''
     # Проверяем список замены
     _check_alts(alts, stor)
     
     # Строим список для закупки
     order_list = _build_order_list(stor)
-    
-    # Печатаем таблицу по наличию
-    #_print_list(stor, order_list)
-    
-    # Сохраняем список для закупки в json-файл
+    # Сохраняем в json-файл
     order_dump_to_json(order_list)
     
-    return build_http_table(stor, order_list)
+    return build_html_table(stor, order_list)
 
-
+'''#Главная функция для отдельного запуска
 def main(alts, stor, order_list):
-    # Проверяем список замены
+    # Проверяем список аналогов
     _check_alts(alts, stor)
-    
-    # Строим список для закупки
+    # Пересчитываем все недостающие
     order_list = _build_order_list(stor)
-    
-    # Печатаем таблицу по наличию
-    #_print_list(stor, order_list)
-    
-    # Сохраняем список для закупки в json-файл
+    # Сохраняем для заказа в json
     order_dump_to_json(order_list)
+    # Сохраняем таблицу для вставки в html-файл
     with open("http_table", mode="w") as f:
-        f.write(build_http_table(stor, order_list))
-
+        f.write(build_html_table(stor, order_list))
+'''
 
 if (__name__ == "__main__"):
-    main(alts, stor, order_list)
+    #main(alts, stor, order_list)
+    print("Only as module using allowed.")

@@ -1,22 +1,44 @@
 from django.shortcuts import render
-from django.http import HttpResponse as response
+from django.http import HttpResponse
+import os
+import mimetypes
+
 from . import keepstor
 
 # Create your views here.
-html_head = "<!DOCTYPE html><head><title>TableView</title></head>"
-html_open = "<html>"
-html_link = "<a href=\"order_list\">Спецификация</a> для заказа<br/>"
-html_close = "</html>"
+json_raw_path = "./tabview/templates/tabview/order_list.json"
 
 def show(request):
-    result = html_head + html_open + html_link
-    result += keepstor.get_http_result_table()
-    result += html_close
-    return response(result)
-    
+    table_content = keepstor.get_html_result_table()
+
+    return render(
+        request,
+        "tabview/index.html",
+        {"table_content": table_content}
+        )
+
+
 def show_orderset(request):
-    result = html_head + html_open
-    with open("order_list.json") as f:
+    with open(os.path.normpath(json_raw_path)) as f:
         result = f.read()
-    result += html_close
-    return response(result)
+
+    return render(
+        request,
+        "tabview/order_list.json",
+        {"order_content": result}
+        )
+
+def get_orderset(request):
+    json_file = os.path.normpath(json_raw_path)
+    with open(json_file, "rb") as f:
+        response = HttpResponse(f.read());
+
+    file_type = mimetypes.guess_type(json_file);
+    if file_type is None:
+        file_type = 'application/octet-stream';
+
+    response['Content-Type'] = file_type
+    response['Content-Length'] = str(os.stat(json_file).st_size);
+    response['Content-Disposition'] = "attachment; filename=order_list.json";
+
+    return response;

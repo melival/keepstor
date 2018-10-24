@@ -1,0 +1,9 @@
+{% extends "tabview/_template.html" %}
+
+{% block head %}
+<title>Данные для заказа</title>
+{% endblock %}
+
+{% block content %}
+    {{ order_content|safe }}
+{% endblock %}
